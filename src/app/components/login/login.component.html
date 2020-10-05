@@ -1,3 +1,4 @@
+<div><ngb-alert *ngIf="successMessage" type="success" class="alert" (close)="successMessage = ''">{{ successMessage }}</ngb-alert></div>
 <h2>Login</h2>
 <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
     <div class="form-group">

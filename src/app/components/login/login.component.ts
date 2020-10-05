@@ -3,6 +3,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { first } from 'rxjs/operators';
 
+import {Subject} from 'rxjs';
+import {debounceTime} from 'rxjs/operators';
+
 import { AlertService } from '../../service/alert';
 import { AuthenticationService } from '../../service/authentication.service'
 
@@ -10,12 +13,17 @@ import { AuthenticationService } from '../../service/authentication.service'
 templateUrl: './login.component.html',
 styleUrls: ['./login.component.css'] })
 
-// has been swapped with sig-in component
+
 export class LoginComponent implements OnInit {
     loginForm: FormGroup;
     loading = false;
     submitted = false;
     returnUrl: string;
+
+    private _success = new Subject<string>();
+
+  staticAlertClosed = false;
+  successMessage = '';
 
     constructor(
         private formBuilder: FormBuilder,
@@ -31,6 +39,11 @@ export class LoginComponent implements OnInit {
     }
 
     ngOnInit() {
+      this._success.subscribe(message => this.successMessage = message);
+      this._success.pipe(
+        debounceTime(1500)
+      ).subscribe(() => this.successMessage = '');
+
         this.loginForm = this.formBuilder.group({
             username: ['', Validators.required],
             password: ['', Validators.required]
@@ -49,6 +62,8 @@ export class LoginComponent implements OnInit {
         if (this.loginForm.invalid) {
             return;
         }
+
+        this._success.next('Вы успешно вошли в учётку');
         this.loading = true;
         // authentication of login
         this.authenticationService.login(this.f.username.value, this.f.password.value)

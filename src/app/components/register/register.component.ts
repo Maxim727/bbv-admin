@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators} from '@angular/forms';
 import { first } from 'rxjs/operators';
 
+import {Subject} from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+
 import { AuthenticationService} from '../../service/authentication.service';
 import {UserService} from '../../service/user.service'
 import {AlertService} from '../../service/alert'
@@ -16,6 +19,11 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   loading = false;
   submitted = false;
+
+  private _success = new Subject<string>();
+
+  staticAlertClosed = false;
+  successMessage = '';
 
   constructor(
       private formBuilder: FormBuilder,
@@ -31,6 +39,14 @@ export class RegisterComponent implements OnInit {
   }
 
   ngOnInit() {
+
+    setTimeout(() => this.staticAlertClosed = true, 20000);
+
+    this._success.subscribe(message => this.successMessage = message);
+    this._success.pipe(
+      debounceTime(1500)
+    ).subscribe(() => this.successMessage = '');
+
       this.registerForm = this.formBuilder.group({
           firstName: ['', Validators.required],
           lastName: ['', Validators.required],
@@ -47,6 +63,8 @@ export class RegisterComponent implements OnInit {
 
       // reset alerts on submit
       this.alertService.clear();
+
+      this._success.next('Вы успешно зарегистрированы в системе');
 
       // stop here if form is invalid
       if (this.registerForm.invalid) {
